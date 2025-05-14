@@ -1,0 +1,6 @@
+.dev*
+hadoop/
+s_code/
+.env
+links.txt
+test*
