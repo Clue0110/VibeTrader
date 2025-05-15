@@ -250,7 +250,7 @@ def train_model(model, X_seq_train, X_aux_train, y_train, epochs=5):
 # -------------------------
 # 6. Save Model to MongoDB
 # -------------------------
-def save_model_to_mongodb(model, db_name="stock_db", collection_name="model_weights"):
+def save_model_to_mongodb(model, db_name="VibeTraderNN", collection_name="model_weights"):
     client = MongoClient("mongodb+srv://ynakilan:hciproject@cluster0.afovue6.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0")
     db = client[db_name]
     collection = db[collection_name]
@@ -269,7 +269,7 @@ def save_model_to_mongodb(model, db_name="stock_db", collection_name="model_weig
 # -------------------------
 # 7. Load Model from MongoDB
 # -------------------------
-def load_model_from_mongodb(db_name="stock_db", collection_name="model_weights"):
+def load_model_from_mongodb(db_name="VibeTraderNN", collection_name="model_weights"):
     client = MongoClient("mongodb+srv://ynakilan:hciproject@cluster0.afovue6.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0")
     db = client[db_name]
     collection = db[collection_name]
@@ -358,9 +358,9 @@ def unit_test_final_model():
 
     model = StockSentimentModel()
     train_model(model, X_seq_train, X_aux_train, y_train)
-    save_model_to_mongodb(model)
+    save_model_to_mongodb(model, collection_name="MSFT")
 
-    loaded_model = load_model_from_mongodb()
+    loaded_model = load_model_from_mongodb(collection_name="MSFT")
     
 
     evaluate_model(loaded_model, X_seq_test, X_aux_test, y_test)

@@ -118,7 +118,7 @@ def fetch_prev_stock_data(ticker_symbol: str, curr_date: datetime = None, period
     
 if __name__=="__main__":
     ticker="MSFT"
-    print(fetch_and_save_stock_data_10_years(ticker))
-    result=fetch_prev_stock_data(ticker, period=60,freq="h")
+    #print(fetch_and_save_stock_data_10_years(ticker))
+    result=fetch_prev_stock_data(ticker, period=60,freq="h",return_sequence=False)
     print(result)
     print(len(result))

@@ -37,7 +37,7 @@ def per_hour_routine(ticker: str = "^OEX"):
     #Step 5: Final Prediction Model
     new_predictor_values = np.array([stock_pred_value, sentiment_score_vader, sentiment_score_ml, sentiment_score_llm])
     final_predictor_values=np.append(seq_stock_60, new_predictor_values)
-    loaded_model = load_model_from_mongodb()
+    loaded_model = load_model_from_mongodb(collection_name=ticker)
     final_predicted_stock_value=predict_with_model(loaded_model, final_predictor_values)
 
     #Step 6: Save the data to Redis
@@ -46,13 +46,13 @@ def per_hour_routine(ticker: str = "^OEX"):
     #Step 7: Return the final_predicator_row+final_predicted_stock_value
     return np.append(final_predicted_stock_value, np.array([final_predicted_stock_value]))
 
-def per_day_routine(company_name: str = "^OEX"):
+def per_day_routine(ticker: str = "^OEX"):
     #Step 0: Fetch Last 5 years stock data
     stock_df=None #Get a dataframe
     stock_senti_df=None #Get a dataframe
 
     #Step 1: Train an Algorithmic Trading model for last 5 years
-    predictor = StockPredictor(company_name)
+    predictor = StockPredictor(ticker)
     x_train, y_train = predictor.create_sequences(df_data=stock_df)
     predictor.build_model()
     predictor.train(x_train,y_train)
@@ -64,6 +64,6 @@ def per_day_routine(company_name: str = "^OEX"):
     )
     model = StockSentimentModel()
     train_model(model, X_seq_train, X_aux_train, y_train)
-    save_model_to_mongodb(model)
+    save_model_to_mongodb(model,collection_name=ticker)
 
     #Step 3: Save the data to SQL
