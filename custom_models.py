@@ -29,6 +29,7 @@ from bson.binary import Binary
 
 from dotenv import load_dotenv
 import os
+load_dotenv()
 
 class StockPredictor:
     def __init__(self, company_name=None , sequence_length=60):
@@ -38,7 +39,7 @@ class StockPredictor:
         self.model = None
         self.client = None
 
-    def connect_to_db(self , uri="mongodb+srv://ynakilan:hciproject@cluster0.afovue6.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0"):
+    def connect_to_db(self , uri=os.environ.get("MDB_CONNECTION_STRING")):
         try:
           self.client = MongoClient(uri, server_api=ServerApi('1'))
         except Exception as e:
@@ -251,7 +252,7 @@ def train_model(model, X_seq_train, X_aux_train, y_train, epochs=5):
 # 6. Save Model to MongoDB
 # -------------------------
 def save_model_to_mongodb(model, db_name="VibeTraderNN", collection_name="model_weights"):
-    client = MongoClient("mongodb+srv://ynakilan:hciproject@cluster0.afovue6.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0")
+    client = MongoClient(os.environ.get("MDB_CONNECTION_STRING"))
     db = client[db_name]
     collection = db[collection_name]
     collection.delete_many({})
@@ -270,7 +271,7 @@ def save_model_to_mongodb(model, db_name="VibeTraderNN", collection_name="model_
 # 7. Load Model from MongoDB
 # -------------------------
 def load_model_from_mongodb(db_name="VibeTraderNN", collection_name="model_weights"):
-    client = MongoClient("mongodb+srv://ynakilan:hciproject@cluster0.afovue6.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0")
+    client = MongoClient(os.environ.get("MDB_CONNECTION_STRING"))
     db = client[db_name]
     collection = db[collection_name]
     doc = collection.find_one({"model_name": "stock_sentiment_lstm"})
