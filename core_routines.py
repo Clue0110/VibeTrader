@@ -2,8 +2,11 @@ from custom_models import *
 from sentiment import *
 from news import *
 from stock import *
+import json
+from db_utils import redis_db
+import pytz
 
-def per_hour_routine(ticker: str = "^OEX"):
+def per_hour_routine(ticker: str = "^OEX",scheduled_time: str = ""):
     """
         This function is called every hour to predict the stock price of a company.
     """
@@ -44,9 +47,26 @@ def per_hour_routine(ticker: str = "^OEX"):
     # Save Predicted stock value (both algo trade + algoTradewithsenti)
 
     #Step 7: Return the final_predicator_row+final_predicted_stock_value
-    return np.append(final_predicted_stock_value, np.array([final_predicted_stock_value]))
+    #return np.append(final_predicted_stock_value, np.array([final_predicted_stock_value]))
+    ny_timezone = pytz.timezone('America/New_York')
+    date_str=datetime.now(ny_timezone).strftime('%Y-%m-%d')
+    key=date_str+"_"+scheduled_time+"_"+ticker
+    payload={
+        "company":ticker,
+        "time":scheduled_time,
+        "predicted_stock_algo":stock_pred_value,
+        "predicted_stock_senti":final_predicted_stock_value
+    }
+    try:
+        db=redis_db()
+        db.set(key, json.dumps(payload))
+        db.close_connection()
+        print(f"Redis Key: {key}")
+    except Exception as e:
+        print(f"Error saving to Redis: {e}")
+        return False
 
-def per_day_routine(ticker: str = "^OEX"):
+def per_day_routine(ticker: str = "^OEX", scheduled_time: str = ""):
     #Step 0: Fetch Last 5 years stock data
     stock_df=None #Get a dataframe
     stock_senti_df=None #Get a dataframe

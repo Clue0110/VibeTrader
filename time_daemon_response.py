@@ -70,15 +70,15 @@ def run_kafka_consumer():
                 if message.topic == HOURLY_TOPIC:
                     print(f"  Action: Triggering per_hour_routine for scheduled time {scheduled_time_friendly}...")
                     try:
-                        print(f"TRIGGERED per_hour_routine")
-                        #my_routines.per_hour_routine()
+                        #print(f"TRIGGERED per_hour_routine")
+                        my_routines.per_hour_routine()
                     except Exception as e:
                         print(f"  ERROR during per_hour_routine: {e}")
                 elif message.topic == DAILY_TOPIC:
                     print(f"  Action: Triggering per_day_routine for scheduled time {scheduled_time_friendly}...")
                     try:
-                        print(f"TRIGGERED per_day_routine")
-                        #my_routines.per_day_routine()
+                        #print(f"TRIGGERED per_day_routine")
+                        my_routines.per_day_routine()
                     except Exception as e:
                         print(f"  ERROR during per_day_routine: {e}")
                 else:

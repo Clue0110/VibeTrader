@@ -77,7 +77,7 @@ def run_kafka_triggers_scheduler():
     # Define target times
     target_hourly_times_tuples = [
         (9, 30), (10, 30), (11, 30), (12, 30),  # AM/PM
-        (13, 30), (14, 30), (15, 30), (16, 26)   # PM
+        (13, 30), (14, 30), (15, 30), (16, 30)   # PM
     ]
     target_daily_train_time_tuple = (8, 0)  # 8:00 AM
 
