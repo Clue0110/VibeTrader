@@ -5,6 +5,8 @@ from stock import *
 import json
 from db_utils import redis_db
 import pytz
+import pandas as pd
+import numpy as np
 
 def per_hour_routine(ticker: str = "^OEX",scheduled_time: str = ""):
     """
@@ -25,16 +27,17 @@ def per_hour_routine(ticker: str = "^OEX",scheduled_time: str = ""):
     seq_stock_60=fetch_prev_stock_data(ticker, period=60,freq="h")
 
     #Step 2: Get Last 24 hour news data
-    news_data_comprehensive=get_news_with_text(ticker_mapping[ticker])
+    news_data_comprehensive=get_news_with_text(ticker_mapping[ticker],limit=1)
     news_data_text=convert_news_array_to_text(news_data_comprehensive)
 
     #Step 3: Fetch Prediction Model and predict stock price (Algorithmic Trading)
     predictor = StockPredictor(ticker)
-    stock_pred_value=predictor.user_predict(seq_stock_60)
+    stock_pred_value=predictor.user_predict(seq_stock_60, pre_loaded=False)
 
     #Step 4: Fetch Sentiment Score of the news data
     sentiment_score_vader=get_sentiment_score(news_data_text)
-    sentiment_score_ml=get_sentiment_score_JLabsML(news_data_text)
+    #sentiment_score_ml=get_sentiment_score_JLabsML(news_data_text)
+    sentiment_score_ml=0
     sentiment_score_llm=get_sentiment_score_llm_gemini(news_data_text)
 
     #Step 5: Final Prediction Model
@@ -55,11 +58,12 @@ def per_hour_routine(ticker: str = "^OEX",scheduled_time: str = ""):
         "company":ticker,
         "time":scheduled_time,
         "predicted_stock_algo":stock_pred_value,
-        "predicted_stock_senti":final_predicted_stock_value
+        "predicted_stock_senti":stock_pred_value+final_predicted_stock_value/10
     }
+    print(f"Payload: {payload}")
     try:
         db=redis_db()
-        db.set(key, json.dumps(payload))
+        db.update(key, json.dumps(payload))
         db.close_connection()
         print(f"Redis Key: {key}")
     except Exception as e:
@@ -69,7 +73,14 @@ def per_hour_routine(ticker: str = "^OEX",scheduled_time: str = ""):
 def per_day_routine(ticker: str = "^OEX", scheduled_time: str = ""):
     #Step 0: Fetch Last 5 years stock data
     stock_df=None #Get a dataframe
+    spark = setup_spark()
     stock_senti_df=None #Get a dataframe
+
+    #DEMO PURPOSES ONLY############
+    stock_senti_df = spark.read.option("header","true").csv('oex_final_predict_with_senti.csv')
+    print(stock_senti_df.columns)
+    print(stock_senti_df.show(5))
+    ##########################
 
     #Step 1: Train an Algorithmic Trading model for last 5 years
     predictor = StockPredictor(ticker)
@@ -87,3 +98,8 @@ def per_day_routine(ticker: str = "^OEX", scheduled_time: str = ""):
     save_model_to_mongodb(model,collection_name=ticker)
 
     #Step 3: Save the data to SQL
+
+if __name__ == "__main__":
+    # Example usage
+    per_hour_routine(ticker="^OEX", scheduled_time="10:00 AM")
+    #per_day_routine(ticker="^OEX", scheduled_time="08:00 AM")

@@ -65,11 +65,13 @@ def scrape_article_text(url):
     finally:
         driver.quit()
 
-def get_news_with_text(company):
+def get_news_with_text(company, limit=10):
     metadata = get_news_metadata(company)
     full_articles = []
-
+    index=0
     for article in metadata:
+        if index>=limit:
+            break
         print(f"\nScraping: {article['title']}")
         text = scrape_article_text(article['url'])
         full_articles.append({
@@ -77,6 +79,7 @@ def get_news_with_text(company):
             "url": article['url'],
             "text": text
         })
+        index+=1
 
     return full_articles
 

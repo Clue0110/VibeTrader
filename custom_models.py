@@ -18,6 +18,7 @@ import random
 from pyspark.sql import SparkSession
 from pyspark.sql.functions import col
 from pyspark.ml.feature import StandardScaler, VectorAssembler
+from pyspark.sql.types import FloatType
 import numpy as np
 import torch
 import torch.nn as nn
@@ -129,6 +130,7 @@ class StockPredictor:
         return {'inserted_id': info.inserted_id,'model_name': model_name , 'time_stamp': time.time()}
 
     def load_model(self , model_name):
+        print("Here")
         if self.client is None:
           self.connect_to_db()
         db = self.client['model']
@@ -181,6 +183,15 @@ def generate_synthetic_data(spark, n=10000):
 # -------------------------
 def preprocess_and_scale(df):
     vector_cols = [f"v{i}" for i in range(1, 66)]
+
+    for col_name in vector_cols:
+        if col_name in df.columns: # Check if column exists
+            df = df.withColumn(col_name, col(col_name).cast(FloatType()))
+        else:
+            # Optionally, handle cases where a column might be missing,
+            # though for v1-v65 this might indicate an upstream issue.
+            print(f"Warning: Column '{col_name}' not found in DataFrame. Skipping its conversion.")
+
     assembler = VectorAssembler(inputCols=vector_cols, outputCol="features_vector")
     df_vectorized = assembler.transform(df).select("features_vector")
 
@@ -351,6 +362,8 @@ def predict_with_model(model: StockSentimentModel, input_numpy_array: np.ndarray
 def unit_test_final_model():
     spark = setup_spark()
     df = generate_synthetic_data(spark)
+    print(df.columns)
+    print(df.show(5))
     
     X_seq_train, X_seq_test, X_aux_train, X_aux_test, y_train, y_test = preprocess_and_scale(df)
     X_seq_train, X_seq_test, X_aux_train, X_aux_test, y_train, y_test = convert_to_tensors(
